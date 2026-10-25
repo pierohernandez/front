@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Control de Inventario - Bodega San Miguel</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- jsPDF CDN para reportes PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+    <!-- LOGIN SECTION -->
+    <div
+      id="loginSection"
+      class="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-800 via-teal-700 to-slate-900 p-4"
+    >
+      <div
+        class="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden p-8 border border-emerald-100"
+      >
+        <div class="text-center mb-8">
+          <div
+            class="inline-flex p-4 rounded-full bg-emerald-100 text-emerald-700 mb-3 shadow-inner"
+          >
+            <i data-lucide="store" class="w-10 h-10"></i>
+          </div>
+          <h1 class="text-2xl font-bold text-slate-900 tracking-tight">
+            Bodega San Miguel
+          </h1>
+          <p class="text-sm text-slate-500 mt-1">
+            Sistema Web de Control de Inventario
+          </p>
+        </div>
+
+        <form id="loginForm" class="space-y-5">
+          <div>
+            <label
+              class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2"
+              >Usuario / ROL</label
+            >
+            <div class="relative">
+              <span
+                class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
+              >
+                <i data-lucide="user" class="w-5 h-5"></i>
+              </span>
+              <select
+                id="loginRole"
+                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm outline-none transition-all"
+              >
+                <option value="admin">Administrador (Acceso Completo)</option>
+                <option value="almacenero">Almacenero / Operador</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label
+              class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2"
+              >Contraseña de Acceso</label
+            >
+            <div class="relative">
+              <span
+                class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
+              >
+                <i data-lucide="lock" class="w-5 h-5"></i>
+              </span>
+              <input
+                type="password"
+                id="loginPassword"
+                placeholder="••••••••"
+                required
+                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm outline-none transition-all"
+              />
+            </div>
+            <p class="text-xs text-slate-400 mt-2">
+              Clave predeterminada:
+              <span
+                class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-emerald-700 font-semibold"
+                >admin123</span
+              >
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/30 hover:shadow-emerald-600/50 transition-all flex items-center justify-center gap-2 text-sm"
+          >
+            <span>Ingresar al Sistema</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+          <p class="text-xs text-slate-500">
+            &copy; 2026 Bodega San Miguel - Gestión Interna v2.5
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN APP DASHBOARD INTERFACE -->
+    <div id="appSection" class="hidden min-h-screen flex flex-col md:flex-row">
+      <!-- SIDEBAR -->
+      <aside
+        class="w-full md:w-64 bg-slate-900 text-slate-300 flex-shrink-0 flex flex-col justify-between border-r border-slate-800"
+      >
+        <div>
+          <!-- Brand Header -->
+          <div class="p-5 border-b border-slate-800 flex items-center gap-3">
+            <div class="p-2.5 bg-emerald-600 text-white rounded-xl shadow-md">
+              <i data-lucide="store" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <h2 class="font-bold text-white leading-tight">
+                Bodega San Miguel
+              </h2>
+              <span
+                class="text-xs text-emerald-400 font-semibold tracking-wider uppercase"
+                >Control Inventario</span
+              >
+            </div>
+          </div>
+
+          <!-- Navigation Links -->
+          <nav class="p-4 space-y-2">
+            <button
+              id="nav-dashboard"
+              class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all bg-emerald-600 text-white"
+            >
+              <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+              <span>Panel Principal</span>
+            </button>
+
+            <button
+              id="nav-inventory"
+              class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all"
+            >
+              <i data-lucide="package" class="w-5 h-5"></i>
+              <span>Productos / Stock</span>
+            </button>
+
+            <button
+              id="nav-movements"
+              class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all"
+            >
+              <i data-lucide="arrow-left-right" class="w-5 h-5"></i>
+              <span>Entradas y Salidas</span>
+            </button>
+
+            <button
+              id="nav-suppliers"
+              class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all"
+            >
+              <i data-lucide="truck" class="w-5 h-5"></i>
+              <span>Proveedores</span>
+            </button>
+
+            <button
+              id="nav-reports"
+              class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-all"
+            >
+              <i data-lucide="file-text" class="w-5 h-5"></i>
+              <span>Reportes PDF</span>
+            </button>
+          </nav>
+        </div>
+
+        <!-- User Info & Logout -->
+        <div class="p-4 border-t border-slate-800">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-9 h-9 rounded-full bg-emerald-700 flex items-center justify-center text-white font-extrabold text-sm shadow-md"
+              >
+                <span id="userAvatar">A</span>
+              </div>
+              <div>
+                <p id="userName" class="text-xs font-semibold text-white">
+                  Administrador
+                </p>
+                <p class="text-[10px] text-slate-400 font-medium">En Línea</p>
+              </div>
+            </div>
+            <button
+              class="text-slate-400 hover:text-rose-400 transition-colors p-2 rounded-lg hover:bg-slate-800"
+              id="logoutButton"
+              title="Cerrar Sesión"
+            >
+              <i data-lucide="log-out" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT AREA -->
+      <main class="flex-1 overflow-y-auto bg-slate-50 min-h-screen">
+        <!-- TOP BAR -->
+        <header
+          class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10"
+        >
+          <div class="flex items-center gap-3">
+            <h1
+              id="pageTitle"
+              class="text-xl font-bold text-slate-800 tracking-wide"
+            >
+              Panel Principal
+            </h1>
+          </div>
+          <div class="flex items-center gap-4">
+            <span
+              class="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full font-semibold flex items-center gap-2"
+            >
+              <span
+                class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"
+              ></span>
+              Bodega Abierta
+            </span>
+            <button
+              data-open-product-modal
+              class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition-all flex items-center gap-2"
+            >
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Nuevo Producto</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="p-6 max-w-7xl mx-auto space-y-6">
+          <!-- DASHBOARD TAB -->
+          <div id="tab-dashboard" class="tab-content space-y-6">
+            <!-- Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div
+                class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between"
+              >
+                <div>
+                  <p
+                    class="text-xs font-bold text-slate-400 uppercase tracking-wider"
+                  >
+                    Total Productos
+                  </p>
+                  <h3
+                    id="statTotalProducts"
+                    class="text-3xl font-extrabold text-slate-800 mt-1"
+                  >
+                    0
+                  </h3>
+                </div>
+                <div class="p-3.5 bg-blue-50 text-blue-600 rounded-xl">
+                  <i data-lucide="boxes" class="w-7 h-7"></i>
+                </div>
+              </div>
+
+              <div
+                class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between"
+              >
+                <div>
+                  <p
+                    class="text-xs font-bold text-slate-400 uppercase tracking-wider"
+                  >
+                    Valor Inventario
+                  </p>
+                  <h3
+                    id="statTotalValue"
+                    class="text-3xl font-extrabold text-slate-800 mt-1"
+                  >
+                    S/ 0.00
+                  </h3>
+                </div>
+                <div class="p-3.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                  <i data-lucide="circle-dollar-sign" class="w-7 h-7"></i>
+                </div>
+              </div>
+
+              <div
+                class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between"
+              >
+                <div>
+                  <p
+                    class="text-xs font-bold text-slate-400 uppercase tracking-wider"
+                  >
+                    Stock Crítico
+                  </p>
+                  <h3
+                    id="statCriticalStock"
+                    class="text-3xl font-extrabold text-amber-600 mt-1"
+                  >
+                    0
+                  </h3>
+                </div>
+                <div class="p-3.5 bg-amber-50 text-amber-600 rounded-xl">
+                  <i data-lucide="alert-triangle" class="w-7 h-7"></i>
+                </div>
+              </div>
+
+              <div
+                class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between"
+              >
+                <div>
+                  <p
+                    class="text-xs font-bold text-slate-400 uppercase tracking-wider"
+                  >
+                    Proveedores
+                  </p>
+                  <h3
+                    id="statTotalSuppliers"
+                    class="text-3xl font-extrabold text-slate-800 mt-1"
+                  >
+                    0
+                  </h3>
+                </div>
+                <div class="p-3.5 bg-purple-50 text-purple-600 rounded-xl">
+                  <i data-lucide="users" class="w-7 h-7"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity Table -->
+            <div
+              class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+            >
+              <div
+                class="px-6 py-4 border-b border-slate-100 flex justify-between items-center"
+              >
+                <h3 class="font-bold text-slate-800 text-sm tracking-wide">
+                  Resumen de Productos Recientes
+                </h3>
+                <button
+                  id="show-all-products"
+                  class="text-xs text-emerald-600 hover:text-emerald-700 font-semibold transition-colors"
+                >
+                  Ver Todo &rarr;
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead
+                    class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase border-b border-slate-100"
+                  >
+                    <tr>
+                      <th class="px-6 py-3">Código</th>
+                      <th class="px-6 py-3">Producto</th>
+                      <th class="px-6 py-3">Categoría</th>
+                      <th class="px-6 py-3">Stock</th>
+                      <th class="px-6 py-3">Precio Un.</th>
+                      <th class="px-6 py-3">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="dashboardTableBody"
+                    class="divide-y divide-slate-100"
+                  >
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- INVENTORY TAB -->
+          <div id="tab-inventory" class="tab-content hidden space-y-5">
+            <!-- Filters & Search -->
+            <div
+              class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center"
+            >
+              <div class="relative w-full md:w-80">
+                <i
+                  data-lucide="search"
+                  class="w-4 h-4 absolute left-3 top-3 text-slate-400"
+                ></i>
+                <input
+                  type="text"
+                  id="searchInput"
+                  placeholder="Buscar por código o producto..."
+                  class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                />
+              </div>
+              <div class="flex items-center gap-3 w-full md:w-auto">
+                <select
+                  id="categoryFilter"
+                  class="text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="ALL">Todas las Categorías</option>
+                  <option value="Abarrotes">Abarrotes</option>
+                  <option value="Bebidas">Bebidas</option>
+                  <option value="Lácteos">Lácteos</option>
+                  <option value="Limpieza">Limpieza</option>
+                  <option value="Snacks">Snacks</option>
+                </select>
+                <button
+                  data-open-product-modal
+                  class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 whitespace-nowrap"
+                >
+                  <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                  <span>Agregar</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Full Table -->
+            <div
+              class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+            >
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead
+                    class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase border-b border-slate-100"
+                  >
+                    <tr>
+                      <th class="px-6 py-3">Código</th>
+                      <th class="px-6 py-3">Nombre del Producto</th>
+                      <th class="px-6 py-3">Categoría</th>
+                      <th class="px-6 py-3">Stock Actual</th>
+                      <th class="px-6 py-3">Stock Mín.</th>
+                      <th class="px-6 py-3">Precio Venta</th>
+                      <th class="px-6 py-3">Proveedor</th>
+                      <th class="px-6 py-3 text-center">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="inventoryTableBody"
+                    class="divide-y divide-slate-100"
+                  >
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- MOVEMENTS TAB -->
+          <div id="tab-movements" class="tab-content hidden space-y-5">
+            <div
+              class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm"
+            >
+              <h3 class="font-bold text-slate-800 text-sm">
+                Historial de Entradas y Salidas
+              </h3>
+              <button
+                id="openMovementModalButton"
+                class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2"
+              >
+                <i data-lucide="arrow-up-down" class="w-4 h-4"></i>
+                <span>Registrar Movimiento</span>
+              </button>
+            </div>
+
+            <div
+              class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+            >
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                  <thead
+                    class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase border-b border-slate-100"
+                  >
+                    <tr>
+                      <th class="px-6 py-3">Fecha / Hora</th>
+                      <th class="px-6 py-3">Tipo</th>
+                      <th class="px-6 py-3">Producto</th>
+                      <th class="px-6 py-3">Cantidad</th>
+                      <th class="px-6 py-3">Motivo / Notas</th>
+                      <th class="px-6 py-3">Operador</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="movementsTableBody"
+                    class="divide-y divide-slate-100"
+                  >
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUPPLIERS TAB -->
+          <div id="tab-suppliers" class="tab-content hidden space-y-5">
+            <div
+              class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm"
+            >
+              <div class="relative w-full sm:w-80">
+                <i
+                  data-lucide="search"
+                  class="w-4 h-4 absolute left-3 top-3 text-slate-400"
+                ></i>
+                <input
+                  type="text"
+                  id="supplierSearchInput"
+                  placeholder="Buscar proveedor por nombre o RUC..."
+                  class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-violet-500 outline-none transition-all"
+                />
+              </div>
+              <button
+                id="openSupplierModalButton"
+                class="w-full sm:w-auto bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2"
+              >
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                <span>Nuevo Proveedor</span>
+              </button>
+            </div>
+
+            <div
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+              id="suppliersGrid"
+            >
+              <!-- Dynamic Supplier Cards -->
+            </div>
+          </div>
+
+          <!-- REPORTS TAB -->
+          <div id="tab-reports" class="tab-content hidden space-y-5">
+            <div
+              class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm max-w-xl mx-auto text-center space-y-5"
+            >
+              <div
+                class="inline-flex p-4 bg-emerald-100 text-emerald-700 rounded-full"
+              >
+                <i data-lucide="file-badge" class="w-10 h-10"></i>
+              </div>
+              <div>
+                <h3 class="font-extrabold text-slate-800 text-xl">
+                  Generador de Reportes PDF
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">
+                  Exporte e imprima consolidados oficiales del estado actual de
+                  inventario, bajas y alertas de reposición.
+                </p>
+              </div>
+
+              <div class="pt-4 border-t border-slate-100 space-y-3">
+                <button
+                  id="exportInventoryReportButton"
+                  class="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3.5 px-4 rounded-xl shadow transition-all flex items-center justify-center gap-2"
+                >
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                  <span>Exportar Inventario General (PDF)</span>
+                </button>
+                <button
+                  id="exportCriticalStockReportButton"
+                  class="w-full bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-3.5 px-4 rounded-xl shadow transition-all flex items-center justify-center gap-2"
+                >
+                  <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                  <span>Exportar Reporte de Stock Crítico (PDF)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- MODAL NOTIFICACIÓN / ALERTA DE ERROR -->
+    <div
+      id="notificationModal"
+      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-[60] p-4"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-sm w-full p-6 text-center border border-slate-100 shadow-2xl"
+      >
+        <div id="notifIconContainer" class="inline-flex p-4 rounded-full mb-3">
+          <i id="notifIcon" class="w-8 h-8"></i>
+        </div>
+        <h3 id="notifTitle" class="font-bold text-lg text-slate-800 mb-2">
+          Notificación
+        </h3>
+        <p
+          id="notifMessage"
+          class="text-xs text-slate-600 mb-6 leading-relaxed"
+        ></p>
+        <button
+          id="closeNotificationButton"
+          class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-all"
+        >
+          Aceptar
+        </button>
+      </div>
+    </div>
+
+    <!-- MODAL PRODUCTO -->
+    <div
+      id="productModal"
+      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100"
+      >
+        <div
+          class="flex justify-between items-center border-b border-slate-100 pb-4"
+        >
+          <h3 id="modalProductTitle" class="font-bold text-slate-800">
+            Agregar Producto
+          </h3>
+          <button
+            data-close-product-modal
+            class="text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <!--<form id="productForm" class="space-y-4 mt-4">-->
+        <form id="productForm" class="space-y-4 mt-4">
+          <input type="hidden" id="prodIndex" />
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1"
+                >Código SKU</label
+              >
+              <input
+                type="text"
+                id="prodCode"
+                required
+                placeholder="PROD-001"
+                class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1"
+                >Categoría</label
+              >
+              <select
+                id="prodCategory"
+                required
+                class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+              >
+                <option value="Abarrotes">Abarrotes</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Lácteos">Lácteos</option>
+                <option value="Limpieza">Limpieza</option>
+                <option value="Snacks">Snacks</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Nombre del Producto</label
+            >
+            <input
+              type="text"
+              id="prodName"
+              required
+              placeholder="Ej. Aceite Primor 1L"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1"
+                >Stock Inicial</label
+              >
+              <input
+                type="number"
+                id="prodStock"
+                min="0"
+                required
+                placeholder="50"
+                class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1"
+                >Stock Mínimo</label
+              >
+              <input
+                type="number"
+                id="prodMinStock"
+                min="1"
+                required
+                placeholder="10"
+                class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1"
+                >Precio Venta (S/)</label
+              >
+              <input
+                type="number"
+                step="0.01"
+                id="prodPrice"
+                required
+                placeholder="9.50"
+                class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+              />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Proveedor Asignado</label
+            >
+            <select
+              id="prodSupplier"
+              required
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            >
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <button
+            data-close-product-modal
+              type="button"
+              class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all"
+            >
+              Guardar Producto
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL MOVIMIENTO (ENTRADA/SALIDA) -->
+    <div
+      id="movementModal"
+      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100"
+      >
+        <div
+          class="flex justify-between items-center border-b border-slate-100 pb-4"
+        >
+          <h3 class="font-bold text-slate-800">Registrar Entradas / Salidas</h3>
+          <button
+            data-close-movement-modal
+            class="text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form id="movementForm" class="space-y-4 mt-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Tipo de Movimiento</label
+            >
+            <select
+              id="movType"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            >
+              <option value="ENTRADA">Entrada (+ Reabastecimiento)</option>
+              <option value="SALIDA">Salida (- Venta / Merma)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Producto</label
+            >
+            <select
+              id="movProduct"
+              required
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            >
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Cantidad</label
+            >
+            <input
+              type="number"
+              id="movQty"
+              min="1"
+              required
+              placeholder="10"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Notas / Observaciones</label
+            >
+            <input
+              type="text"
+              id="movNotes"
+              placeholder="Ej. Factura #00124 - Compra regular"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              data-close-movement-modal
+              class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all"
+            >
+              Registrar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL PROVEEDOR -->
+    <div
+      id="supplierModal"
+      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100"
+      >
+        <div
+          class="flex justify-between items-center border-b border-slate-100 pb-4"
+        >
+          <h3 id="supplierModalTitle" class="font-bold text-slate-800">
+            Registrar Proveedor
+          </h3>
+          <button
+            data-close-supplier-modal
+            class="text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <form id="supplierForm" class="space-y-4 mt-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Razón Social / Empresa</label
+            >
+            <input
+              type="text"
+              id="suppName"
+              required
+              placeholder="Distribuidora San Juan S.A.C."
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            />
+          </div>
+          <input type="hidden" id="suppId" />
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >RUC</label
+            >
+            <input
+              type="text"
+              id="suppRuc"
+              required
+              placeholder="20123456789"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Teléfono / Contacto</label
+            >
+            <input
+              type="text"
+              id="suppPhone"
+              required
+              placeholder="987654321"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Email</label
+            ><input
+              type="email"
+              id="suppEmail"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Dirección</label
+            ><input
+              type="text"
+              id="suppAddress"
+              class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 outline-none focus:border-emerald-500"
+            />
+          </div>
+          <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <button
+              type="button"
+              data-close-supplier-modal
+              class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 text-xs font-semibold bg-violet-600 hover:bg-violet-700 text-white rounded-xl transition-all"
+            >
+              Guardar Proveedor
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Custom Script -->
+    <script type="module" src="app.js"></script>
+    <script type="module" src="dashboardModule.js"></script>
+    <script type="module" src="productModule.js"></script>
+    <script type="module" src="supplierModule.js"></script>
+    <script type="module" src="authenticationModule.js"></script>
+    <script type="module" src="movementModule.js"></script>
+  </body>
+</html>
