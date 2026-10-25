@@ -1,3 +1,5 @@
+import API_URL from "../../constants/api.js";
+
 const getCategories = async () => {
   const url = `${API_URL}/categorias`;
 
