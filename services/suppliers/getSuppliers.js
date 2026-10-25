@@ -1,5 +1,5 @@
 const getSuppliers = async () => {
-  const url = "http://localhost:3000/proveedores";
+  const url = `${API_URL}/proveedores`;
 
   const response = await fetch(url);
 

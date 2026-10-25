@@ -1,5 +1,5 @@
 const getCategories = async () => {
-  const url = "http://localhost:3000/categorias";
+  const url = `${API_URL}/categorias`;
 
   const response = await fetch(url);
 
